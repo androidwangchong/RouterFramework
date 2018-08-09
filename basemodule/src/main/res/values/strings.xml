@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">basemodule</string>
+    <string name="back">返回</string>
+    <string name="network_error">网络错误</string>
+    <string name="no_data">暂时没有数据</string>
+    <string name="please_wait">请稍等...</string>
+</resources>

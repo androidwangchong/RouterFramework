@@ -1,0 +1,103 @@
+apply plugin: 'com.android.library'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+android {
+    compileSdkVersion 25
+    buildToolsVersion "27.0.2"
+
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    defaultConfig {
+        // dex突破65535的限制
+        multiDexEnabled true
+    }
+}
+def anko_version = '0.10.5'
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+    implementation 'com.android.support:appcompat-v7:25.4.0'
+    testImplementation 'junit:junit:4.12'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile("org.jetbrains.anko:anko:$anko_version") {
+        exclude group: 'com.google.android', module: 'android'
+    }
+    // Anko Commons
+    compile "org.jetbrains.anko:anko-commons:$anko_version"
+
+    // Anko Layouts
+    compile "org.jetbrains.anko:anko-sdk25:$anko_version"
+
+    // sdk15, sdk19, sdk21, sdk23 are also available
+    compile "org.jetbrains.anko:anko-appcompat-v7:$anko_version"
+
+    // Coroutine listeners for Anko Layouts
+    compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+    compile "org.jetbrains.anko:anko-appcompat-v7-coroutines:$anko_version"
+
+    // Anko SQLite
+    compile "org.jetbrains.anko:anko-sqlite:$anko_version"
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'de.greenrobot:eventbus:2.4.0'
+    compile 'com.android.support:multidex:1.0.1'
+    //状态栏颜色
+    compile 'com.jaeger.statusbarutil:library:1.4.0'
+
+    //日志打印工具
+    compile 'com.orhanobut:logger:2.1.1'
+
+    //动画效果
+    compile 'com.github.florent37:viewanimator:1.0.5'
+
+    //添加rxkotlin
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+
+    // Because RxAndroid releases are few and far between, it is recommended you also
+
+    // explicitly depend on RxJava's latest version for bug fixes and new features.
+    compile 'io.reactivex.rxjava2:rxjava:2.1.1'
+    compile 'com.jakewharton.rxbinding2:rxbinding-kotlin:2.0.0'
+    compile 'com.jakewharton.rxbinding2:rxbinding-support-v4-kotlin:2.0.0'
+    compile 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7-kotlin:2.0.0'
+    compile 'com.jakewharton.rxbinding2:rxbinding-design-kotlin:2.0.0'
+    compile 'com.jakewharton.rxbinding2:rxbinding-recyclerview-v7-kotlin:2.0.0'
+    compile 'io.reactivex.rxjava2:rxkotlin:2.1.0'
+
+    //添加底部dialog
+    compile 'me.shaohui:bottomdialog:1.1.9'
+    compile 'in.srain.cube:ptr-load-more:1.0.6'
+
+    //添加文件夹选择器https://github.com/spacecowboy/NoNonsense-FilePicker
+
+    //    compile 'com.nononsenseapps:filepicker:4.1.0'
+
+    //glide
+    compile 'com.github.bumptech.glide:glide:4.0.0-RC1'
+    compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.8'
+}
+kotlin {
+    experimental {
+        coroutines "error"
+    }
+}
+kotlin { experimental { coroutines 'enable' } }
