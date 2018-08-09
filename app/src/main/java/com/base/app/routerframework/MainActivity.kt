@@ -171,6 +171,61 @@ class MainActivity : BaseActivity() {
             orderCreateRequest.orderHash = Hash.sha3(Numeric.toHexStringNoPrefix(orderString.toByteArray()))
             orderAuthCreate(orderCreateRequest)
 
+//            //卖单
+//
+//            var price = 1.0
+//            var size = 1.0
+//            var fee = 0.0009
+//
+//            var order = Order()
+//            order.maker = textView.text.toString()
+//            order.taker = "0x0000000000000000000000000000000000000000"
+//            order.feeRecipient = "0x0000000000000000000000000000000000000000"
+//            order.makerTokenAddress = "0x4bc8e905df73d617eb37d7880fc4751d7cb1c645"
+//            order.takerTokenAddress = "0xc778417e063141139fce010982780140aa0cd5ab"
+//            order.exchangeContractAddress = "0x479cc461fecd078f766ecc58533d6f69580cf3ac"
+//            order.salt = generatePseudoRandomSalt()
+//            order.makerFee = "0"
+//            order.takerFee = "0"
+//            order.makerTokenAmount = BigDecimal(size.toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
+//            order.takerTokenAmount = BigDecimal((price * size - fee).toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
+//            order.expirationUnixTimestampSec = "4099680000000"
+//            val orderString = JSON.toJSONString(order)
+//            Logger.json(orderString)
+//            //获得签名
+//            val signature = placeTheOrder(this@MainActivity, textView.text.toString(), orderString)
+//            var orderAndSignature = OrderAndSignature()
+//            orderAndSignature.maker = order.maker
+//            orderAndSignature.taker = order.taker
+//            orderAndSignature.feeRecipient = order.feeRecipient
+//            orderAndSignature.makerTokenAddress = order.makerTokenAddress
+//            orderAndSignature.takerTokenAddress = order.takerTokenAddress
+//            orderAndSignature.exchangeContractAddress = order.exchangeContractAddress
+//            orderAndSignature.salt = order.salt
+//            orderAndSignature.makerFee = order.makerFee
+//            orderAndSignature.takerFee = order.takerFee
+//            orderAndSignature.makerTokenAmount = order.makerTokenAmount
+//            orderAndSignature.takerTokenAmount = order.takerTokenAmount
+//            orderAndSignature.expirationUnixTimestampSec = order.expirationUnixTimestampSec
+//            var ecSignatureBean = OrderAndSignature.EcSignatureBean()
+//            ecSignatureBean.r = Numeric.toHexString(signature.r).toString()
+//            ecSignatureBean.s = Numeric.toHexString(signature.s).toString()
+//            ecSignatureBean.v = Integer.toString(signature.v.toInt()).toString()
+//            orderAndSignature.ecSignature = ecSignatureBean
+//            //组装post
+//            var orderCreateRequest = OrderCreateRequest()
+//            orderCreateRequest.baseToken = "CETF"
+//            orderCreateRequest.counterToken = "WETH"
+//            orderCreateRequest.orderType = "SELL"
+//            orderCreateRequest.amount = size.toString()
+//            orderCreateRequest.price = price.toString()
+//            orderCreateRequest.fee = fee.toString()
+//            orderCreateRequest.signedJson = JSON.parseObject(JSON.toJSONString(orderAndSignature))
+//            orderCreateRequest.orderHash = Hash.sha3(Numeric.toHexStringNoPrefix(orderString.toByteArray()))
+//            orderAuthCreate(orderCreateRequest)
+
+
+
         }
 
         clickThrottleFirst(deposit) {
