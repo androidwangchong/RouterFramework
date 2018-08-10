@@ -1,12 +1,16 @@
 package com.base.app.routerframework
 
 import android.content.Intent
+import android.os.CountDownTimer
 import android.text.TextUtils
+import android.util.Log
 import android.widget.Toast
 import com.alibaba.fastjson.JSON
 import com.base.app.R
 import com.base.app.basemodule.app.MyApplication
 import com.base.app.basemodule.baseactivity.BaseActivity
+import com.base.app.basemodule.utils.SPUtils
+import com.base.app.basemodule.utils.SPUtils.WALLET_PASSWORD
 import com.base.app.basemodule.utils.clickThrottleFirst
 import com.base.app.basemodule.widget.Toaster
 import com.base.app.ethprotocol.data.bean.CreateETHAdressSucced
@@ -23,6 +27,9 @@ import com.base.app.httpmodule.http.api.blockchainapi.blockchainPretransinfo
 import com.base.app.httpmodule.http.api.blockchainapi.blockchainRawtransaction
 import com.base.app.httpmodule.http.api.blockchainapi.blockchainTransreceipt
 import com.base.app.httpmodule.http.api.orderapi.orderAuthCreate
+import com.base.app.httpmodule.http.api.orderapi.orderCancel
+import com.base.app.httpmodule.http.api.orderapi.queryOrderMy
+import com.base.app.httpmodule.http.api.orderapi.queryTheQuotation
 import com.orhanobut.logger.Logger
 import io.reactivex.rxkotlin.toSingle
 import kotlinx.android.synthetic.main.activity_main.*
@@ -40,6 +47,7 @@ import org.web3j.utils.Numeric
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MainActivity : BaseActivity() {
@@ -47,20 +55,16 @@ class MainActivity : BaseActivity() {
     var IS_IMPORT_ACCOUNT = false
     var retryblockNumber = 1
     var isdeposit = false
-
+    var lastPrice = 0f
+    var buyAndSellNum = 0
+    var isBuy = true
+    var orderlist: ArrayList<OrderContentInfo.ListBean>? = ArrayList()
     override val title: String by lazy {
         ""
     }
     override val layoutResId: Int = R.layout.activity_main
 
     override fun getIntentMessageData() {
-        val keys = WalletStorage.getInstance(MyApplication.instance())
-                .getFullWallet(MyApplication.instance(), "Passw0rd!", "0x064a724b35c80387dc72c5cd88ccb5d6ed7a1b6e")
-        Logger.d(keys.ecKeyPair.privateKey.toString(16))
-
-
-
-
 
     }
 
@@ -105,6 +109,7 @@ class MainActivity : BaseActivity() {
         }
 
         clickThrottleFirst(buy_order) {
+            countDownTimer.start()
             //        var s = "{"maker":"0x6020ee58e2a695c6d696dcf0919a04c7a6d316f9"
 //        ,"taker":"0x0000000000000000000000000000000000000000"
 //        ,"feeRecipient":"0x0000000000000000000000000000000000000000"
@@ -117,113 +122,6 @@ class MainActivity : BaseActivity() {
 //        ,"makerTokenAmount":"100000000000000000000"
 //        ,"takerTokenAmount":"100000000000000"
 //        ,"expirationUnixTimestampSec":"4099680000000"}"
-
-            //买单
-
-            var price = 1.0
-            var size = 1.0
-            var fee = 0.0009
-
-            var order = Order()
-            order.maker = textView.text.toString()
-            order.taker = "0x0000000000000000000000000000000000000000"
-            order.feeRecipient = "0x0000000000000000000000000000000000000000"
-            order.makerTokenAddress = "0xc778417e063141139fce010982780140aa0cd5ab"
-            order.takerTokenAddress = "0x4bc8e905df73d617eb37d7880fc4751d7cb1c645"
-            order.exchangeContractAddress = "0x479cc461fecd078f766ecc58533d6f69580cf3ac"
-            order.salt = generatePseudoRandomSalt()
-            order.makerFee = "0"
-            order.takerFee = "0"
-            order.makerTokenAmount = BigDecimal((price * size + fee).toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
-            order.takerTokenAmount = BigDecimal(size.toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
-            order.expirationUnixTimestampSec = "4099680000000"
-            val orderString = JSON.toJSONString(order)
-            Logger.json(orderString)
-            //获得签名
-            val signature = placeTheOrder(this@MainActivity, textView.text.toString(), orderString)
-            var orderAndSignature = OrderAndSignature()
-            orderAndSignature.maker = order.maker
-            orderAndSignature.taker = order.taker
-            orderAndSignature.feeRecipient = order.feeRecipient
-            orderAndSignature.makerTokenAddress = order.makerTokenAddress
-            orderAndSignature.takerTokenAddress = order.takerTokenAddress
-            orderAndSignature.exchangeContractAddress = order.exchangeContractAddress
-            orderAndSignature.salt = order.salt
-            orderAndSignature.makerFee = order.makerFee
-            orderAndSignature.takerFee = order.takerFee
-            orderAndSignature.makerTokenAmount = order.makerTokenAmount
-            orderAndSignature.takerTokenAmount = order.takerTokenAmount
-            orderAndSignature.expirationUnixTimestampSec = order.expirationUnixTimestampSec
-            var ecSignatureBean = OrderAndSignature.EcSignatureBean()
-            ecSignatureBean.r = Numeric.toHexString(signature.r).toString()
-            ecSignatureBean.s = Numeric.toHexString(signature.s).toString()
-            ecSignatureBean.v = Integer.toString(signature.v.toInt()).toString()
-            orderAndSignature.ecSignature = ecSignatureBean
-            //组装post
-            var orderCreateRequest = OrderCreateRequest()
-            orderCreateRequest.baseToken = "CETF"
-            orderCreateRequest.counterToken = "WETH"
-            orderCreateRequest.orderType = "BUY"
-            orderCreateRequest.amount = size.toString()
-            orderCreateRequest.price = price.toString()
-            orderCreateRequest.fee = fee.toString()
-            orderCreateRequest.signedJson = JSON.parseObject(JSON.toJSONString(orderAndSignature))
-            orderCreateRequest.orderHash = Hash.sha3(Numeric.toHexStringNoPrefix(orderString.toByteArray()))
-            orderAuthCreate(orderCreateRequest)
-
-//            //卖单
-//
-//            var price = 1.0
-//            var size = 1.0
-//            var fee = 0.0009
-//
-//            var order = Order()
-//            order.maker = textView.text.toString()
-//            order.taker = "0x0000000000000000000000000000000000000000"
-//            order.feeRecipient = "0x0000000000000000000000000000000000000000"
-//            order.makerTokenAddress = "0x4bc8e905df73d617eb37d7880fc4751d7cb1c645"
-//            order.takerTokenAddress = "0xc778417e063141139fce010982780140aa0cd5ab"
-//            order.exchangeContractAddress = "0x479cc461fecd078f766ecc58533d6f69580cf3ac"
-//            order.salt = generatePseudoRandomSalt()
-//            order.makerFee = "0"
-//            order.takerFee = "0"
-//            order.makerTokenAmount = BigDecimal(size.toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
-//            order.takerTokenAmount = BigDecimal((price * size - fee).toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
-//            order.expirationUnixTimestampSec = "4099680000000"
-//            val orderString = JSON.toJSONString(order)
-//            Logger.json(orderString)
-//            //获得签名
-//            val signature = placeTheOrder(this@MainActivity, textView.text.toString(), orderString)
-//            var orderAndSignature = OrderAndSignature()
-//            orderAndSignature.maker = order.maker
-//            orderAndSignature.taker = order.taker
-//            orderAndSignature.feeRecipient = order.feeRecipient
-//            orderAndSignature.makerTokenAddress = order.makerTokenAddress
-//            orderAndSignature.takerTokenAddress = order.takerTokenAddress
-//            orderAndSignature.exchangeContractAddress = order.exchangeContractAddress
-//            orderAndSignature.salt = order.salt
-//            orderAndSignature.makerFee = order.makerFee
-//            orderAndSignature.takerFee = order.takerFee
-//            orderAndSignature.makerTokenAmount = order.makerTokenAmount
-//            orderAndSignature.takerTokenAmount = order.takerTokenAmount
-//            orderAndSignature.expirationUnixTimestampSec = order.expirationUnixTimestampSec
-//            var ecSignatureBean = OrderAndSignature.EcSignatureBean()
-//            ecSignatureBean.r = Numeric.toHexString(signature.r).toString()
-//            ecSignatureBean.s = Numeric.toHexString(signature.s).toString()
-//            ecSignatureBean.v = Integer.toString(signature.v.toInt()).toString()
-//            orderAndSignature.ecSignature = ecSignatureBean
-//            //组装post
-//            var orderCreateRequest = OrderCreateRequest()
-//            orderCreateRequest.baseToken = "CETF"
-//            orderCreateRequest.counterToken = "WETH"
-//            orderCreateRequest.orderType = "SELL"
-//            orderCreateRequest.amount = size.toString()
-//            orderCreateRequest.price = price.toString()
-//            orderCreateRequest.fee = fee.toString()
-//            orderCreateRequest.signedJson = JSON.parseObject(JSON.toJSONString(orderAndSignature))
-//            orderCreateRequest.orderHash = Hash.sha3(Numeric.toHexStringNoPrefix(orderString.toByteArray()))
-//            orderAuthCreate(orderCreateRequest)
-
 
 
         }
@@ -249,6 +147,11 @@ class MainActivity : BaseActivity() {
 
     override fun initData() {
 
+    }
+
+    override fun onPause() {
+        super.onPause()
+        countDownTimer.cancel()
     }
 
 
@@ -282,6 +185,9 @@ class MainActivity : BaseActivity() {
                 if (5 == event.state) {
                     runOnUiThread {
                         Toast.makeText(this@MainActivity, "导入成功", Toast.LENGTH_SHORT).show()
+                        var keystore_password = et_keystore_password.text.toString().trim()
+
+                        SPUtils.put(this, WALLET_PASSWORD, keystore_password)
                     }
                 } else if (0 == event.state) {
                     runOnUiThread {
@@ -316,7 +222,7 @@ class MainActivity : BaseActivity() {
                                         BigInteger(event.nonce?.replace("0x", ""), 16).toInt(),
                                         event.gasPrice,
                                         event.gasLimit,
-                                        "0.5"))
+                                        "0.5"), SPUtils.get(this, WALLET_PASSWORD, "Passw0rd!").toString())
                     } else {
                         blockchainRawtransaction(
                                 withdrawToData(
@@ -324,7 +230,7 @@ class MainActivity : BaseActivity() {
                                         "0xc778417e063141139fce010982780140aa0cd5ab",
                                         BigInteger(event.nonce?.replace("0x", ""), 16).toInt(),
                                         event.gasPrice,
-                                        event.gasLimit))
+                                        event.gasLimit), SPUtils.get(this, WALLET_PASSWORD, "Passw0rd!").toString())
                     }
 
                 } else {
@@ -338,7 +244,7 @@ class MainActivity : BaseActivity() {
                                     event.contractAddress,
                                     BigInteger(event.nonce?.replace("0x", ""), 16).toInt(),
                                     event.gasPrice,
-                                    event.gasLimit))
+                                    event.gasLimit, SPUtils.get(this, WALLET_PASSWORD, "Passw0rd!").toString()))
                 }
 
 
@@ -382,9 +288,64 @@ class MainActivity : BaseActivity() {
                 }
                 Toaster.showCenter(this@MainActivity, getString(R.string.network_error))
             }
+            is QueryQuotationContentInfo -> {
+                var recentPrice = event.lastPrice!!.toFloat()
+                Log.i("", event.lastPrice)
+                if (TextUtils.isEmpty(event.lastPrice) || event.lastPrice!!.toFloat() == 0f) {
+                } else {
+
+                    if (lastPrice == 0f) {
+                        underTheCheck(BigDecimal((recentPrice * 0.8f).toString()).toFloat())
+                        unDerTheSale(BigDecimal((recentPrice * 1.2f).toString()).toFloat())
+                        lastPrice = recentPrice
+                    } else {
+                        if (recentPrice > lastPrice) { //价格上涨
+                            queryOrderMy()
+                            isBuy = true
+                            lastPrice = recentPrice
+                        } else if (recentPrice < lastPrice) {//价格下跌
+                            queryOrderMy()
+                            isBuy = false
+                            lastPrice = recentPrice
+                        }
+                    }
+                }
+
+            }
+
+            is OrderContentInfo -> {//卖单数据/买单数据
+                orderlist = event.list
+                for (orderContentInfo in orderlist!!) {
+                    if (isBuy) {
+                        if ("BUY".equals(orderContentInfo.orderType)) {
+                            orderCancel(orderContentInfo?.orderHash)
+                        }
+                    } else {
+                        if ("SELL".equals(orderContentInfo.orderType)) {
+                            orderCancel(orderContentInfo?.orderHash)
+                        }
+                    }
+                }
+            }
+            is OrderCancelContentInfo -> {
+                if (isBuy) {
+                    underTheCheck(lastPrice * 0.8f)
+                } else {
+                    unDerTheSale(lastPrice * 1.2f)
+                }
+            }
         }
     }
 
+
+    private val countDownTimer = object : CountDownTimer(Integer.MAX_VALUE.toLong(), (10 * 1000).toLong()) {
+        override fun onTick(millisUntilFinished: Long) {
+            queryTheQuotation()
+        }
+
+        override fun onFinish() {
+        }
+    }
 
     fun isImportAccount(trueToDo: () -> Unit, falseToDo: () -> Unit): Unit {
         when (IS_IMPORT_ACCOUNT) {
@@ -397,5 +358,118 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    /**
+     * 下买单
+     */
+    fun underTheCheck(price: Float) {
+        //买单
+        val rand = Random()
+        var number = rand.nextInt(1000) + 10
+        var fee = 0.0009
+
+        var order = Order()
+        order.maker = textView.text.toString()
+        order.taker = "0x0000000000000000000000000000000000000000"
+        order.feeRecipient = "0x0000000000000000000000000000000000000000"
+        order.makerTokenAddress = "0xc778417e063141139fce010982780140aa0cd5ab"
+        order.takerTokenAddress = "0x4bc8e905df73d617eb37d7880fc4751d7cb1c645"
+        order.exchangeContractAddress = "0x479cc461fecd078f766ecc58533d6f69580cf3ac"
+        order.salt = generatePseudoRandomSalt()
+        order.makerFee = "0"
+        order.takerFee = "0"
+        order.makerTokenAmount = BigDecimal((price * number + fee).toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
+        order.takerTokenAmount = BigDecimal(number.toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
+        order.expirationUnixTimestampSec = "4099680000000"
+        val orderString = JSON.toJSONString(order)
+        Logger.json(orderString)
+        //获得签名
+        val signature = placeTheOrder(this@MainActivity, textView.text.toString(), orderString)
+        var orderAndSignature = OrderAndSignature()
+        orderAndSignature.maker = order.maker
+        orderAndSignature.taker = order.taker
+        orderAndSignature.feeRecipient = order.feeRecipient
+        orderAndSignature.makerTokenAddress = order.makerTokenAddress
+        orderAndSignature.takerTokenAddress = order.takerTokenAddress
+        orderAndSignature.exchangeContractAddress = order.exchangeContractAddress
+        orderAndSignature.salt = order.salt
+        orderAndSignature.makerFee = order.makerFee
+        orderAndSignature.takerFee = order.takerFee
+        orderAndSignature.makerTokenAmount = order.makerTokenAmount
+        orderAndSignature.takerTokenAmount = order.takerTokenAmount
+        orderAndSignature.expirationUnixTimestampSec = order.expirationUnixTimestampSec
+        var ecSignatureBean = OrderAndSignature.EcSignatureBean()
+        ecSignatureBean.r = Numeric.toHexString(signature.r).toString()
+        ecSignatureBean.s = Numeric.toHexString(signature.s).toString()
+        ecSignatureBean.v = Integer.toString(signature.v.toInt()).toString()
+        orderAndSignature.ecSignature = ecSignatureBean
+        //组装post
+        var orderCreateRequest = OrderCreateRequest()
+        orderCreateRequest.baseToken = "CETF"
+        orderCreateRequest.counterToken = "WETH"
+        orderCreateRequest.orderType = "BUY"
+        orderCreateRequest.amount = number.toString()
+        orderCreateRequest.price = BigDecimal(price.toString()).toString()
+        orderCreateRequest.fee = fee.toString()
+        orderCreateRequest.signedJson = JSON.parseObject(JSON.toJSONString(orderAndSignature))
+        orderCreateRequest.orderHash = Hash.sha3(Numeric.toHexStringNoPrefix(orderString.toByteArray()))
+        orderAuthCreate(orderCreateRequest)
+
+    }
+
+    fun unDerTheSale(price: Float) {
+        val rand = Random()
+        var number = rand.nextInt(1000) + 10
+
+        //卖单
+
+        var fee = 0.0009
+
+        var order = Order()
+        order.maker = textView.text.toString()
+        order.taker = "0x0000000000000000000000000000000000000000"
+        order.feeRecipient = "0x0000000000000000000000000000000000000000"
+        order.makerTokenAddress = "0x4bc8e905df73d617eb37d7880fc4751d7cb1c645"
+        order.takerTokenAddress = "0xc778417e063141139fce010982780140aa0cd5ab"
+        order.exchangeContractAddress = "0x479cc461fecd078f766ecc58533d6f69580cf3ac"
+        order.salt = generatePseudoRandomSalt()
+        order.makerFee = "0"
+        order.takerFee = "0"
+        order.makerTokenAmount = BigDecimal(number.toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
+        order.takerTokenAmount = BigDecimal((price * number - fee).toString()).multiply(BigDecimal(Math.pow(10.toDouble(), 18.0))).toBigInteger().toString()
+        order.expirationUnixTimestampSec = "4099680000000"
+        val orderString = JSON.toJSONString(order)
+        Logger.json(orderString)
+        //获得签名
+        val signature = placeTheOrder(this@MainActivity, textView.text.toString(), orderString)
+        var orderAndSignature = OrderAndSignature()
+        orderAndSignature.maker = order.maker
+        orderAndSignature.taker = order.taker
+        orderAndSignature.feeRecipient = order.feeRecipient
+        orderAndSignature.makerTokenAddress = order.makerTokenAddress
+        orderAndSignature.takerTokenAddress = order.takerTokenAddress
+        orderAndSignature.exchangeContractAddress = order.exchangeContractAddress
+        orderAndSignature.salt = order.salt
+        orderAndSignature.makerFee = order.makerFee
+        orderAndSignature.takerFee = order.takerFee
+        orderAndSignature.makerTokenAmount = order.makerTokenAmount
+        orderAndSignature.takerTokenAmount = order.takerTokenAmount
+        orderAndSignature.expirationUnixTimestampSec = order.expirationUnixTimestampSec
+        var ecSignatureBean = OrderAndSignature.EcSignatureBean()
+        ecSignatureBean.r = Numeric.toHexString(signature.r).toString()
+        ecSignatureBean.s = Numeric.toHexString(signature.s).toString()
+        ecSignatureBean.v = Integer.toString(signature.v.toInt()).toString()
+        orderAndSignature.ecSignature = ecSignatureBean
+        //组装post
+        var orderCreateRequest = OrderCreateRequest()
+        orderCreateRequest.baseToken = "CETF"
+        orderCreateRequest.counterToken = "WETH"
+        orderCreateRequest.orderType = "SELL"
+        orderCreateRequest.amount = number.toString()
+        orderCreateRequest.price = BigDecimal(price.toString()).toString()
+        orderCreateRequest.fee = fee.toString()
+        orderCreateRequest.signedJson = JSON.parseObject(JSON.toJSONString(orderAndSignature))
+        orderCreateRequest.orderHash = Hash.sha3(Numeric.toHexStringNoPrefix(orderString.toByteArray()))
+        orderAuthCreate(orderCreateRequest)
+    }
 
 }

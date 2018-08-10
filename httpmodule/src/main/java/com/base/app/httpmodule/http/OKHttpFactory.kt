@@ -40,8 +40,8 @@ object OKHttpFactory {
         builder.hostnameVerifier { hostname, session -> true }
         okHttpClient = OkHttpClient.Builder()
                 //打印请求log
+                //.addInterceptor(MoreBaseUrlInterceptor())
                 .addInterceptor(loggingInterceptor)
-//                .addInterceptor(MoreBaseUrlInterceptor())
                 //stetho,可以在chrome中查看请求
                 .addNetworkInterceptor(object : Interceptor {
                     override fun intercept(chain: Interceptor.Chain?): Response {

@@ -1,5 +1,7 @@
 package com.base.app.httpmodule.http;
 
+import com.base.app.httpmodule.http.apiconfig.HttpConfig;
+
 import java.io.IOException;
 import java.util.List;
 

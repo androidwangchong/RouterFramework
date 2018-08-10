@@ -28,9 +28,11 @@ object HttpHeaderConfig {
 
     fun commonHeader(): Map<String, String> {
         val map = mutableMapOf<String, String>().apply {
-            put("Content-Type", "text/plain")
-            put("Accept", "application/json")
-            put("authorization", "Basic aHktY2xpZW50Omh5LWNsaWVudA==")
+//            put("urlname", "wushuang")
+            put("Content-Type", "application/json")
+//            put("Accept", "application/json")
+            put("auth-message", SPUtils[MyApplication.instance(), MESSAGE, ""] as String)
+            put("auth-signature", SPUtils[MyApplication.instance(), SIGNATURE, ""] as String)
 //            if (MyApplication.instance().getOauthToken().isNullOrEmpty()) {
 //                put("Authorization", "Basic aHktY2xpZW50Omh5LWNsaWVudA==")
 //            } else {
@@ -44,6 +46,7 @@ object HttpHeaderConfig {
 
     fun header(): Map<String, String> {
         val map = mutableMapOf<String, String>().apply {
+//            put("urlname", "kanghao")
             put("Content-Type", "application/json")
 //            put("Accept", "application/json")
 //            put("auth-message", SPUtils[MyApplication.instance(), MESSAGE, ""] as String)
@@ -54,6 +57,7 @@ object HttpHeaderConfig {
 
     fun orderHeader(): Map<String, String> {
         val map = mutableMapOf<String, String>().apply {
+//            put("urlname", "kanghao")
             put("Content-Type", "application/json")
 //            put("Accept", "application/json")
             put("auth-message", SPUtils[MyApplication.instance(), MESSAGE, ""] as String)

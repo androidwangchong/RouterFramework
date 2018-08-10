@@ -5,6 +5,7 @@ import android.util.Log
 import com.alibaba.fastjson.JSON
 import com.base.app.basemodule.app.MyApplication
 import com.base.app.basemodule.baseactivity.BaseActivity
+import com.base.app.basemodule.utils.SPUtils.WALLET_PASSWORD
 import com.base.app.ethprotocol.event.SignOwnerShipResults
 import com.base.app.ethprotocol.utils.ExchangeCalculator
 import com.base.app.ethprotocol.utils.WalletStorage
@@ -32,7 +33,7 @@ import org.web3j.crypto.*
 
 fun signOwnerShip(baesActivity: BaseActivity, address: String) {
     val keys = WalletStorage.getInstance(baesActivity)
-            .getFullWallet(baesActivity, "Passw0rd!", address) ?: ""
+            .getFullWallet(baesActivity, SPUtils.get(baesActivity,WALLET_PASSWORD,"Passw0rd!").toString(), address) ?: ""
     Log.d("keys", keys.toString())
     var m = "QuantBull-Login-Confirm-" + System.currentTimeMillis() + "."
     Log.d("m", m)
@@ -167,7 +168,7 @@ fun placeTheOrder(baesActivity: BaseActivity, address: String, orderString: Stri
     val hash = Hash.sha3(Numeric.toHexStringNoPrefix(orderString.toByteArray()))
     Logger.d("hash", hash)
     val keys = WalletStorage.getInstance(baesActivity)
-            .getFullWallet(baesActivity, "Passw0rd!", address) ?: ""
+            .getFullWallet(baesActivity,  SPUtils.get(baesActivity,WALLET_PASSWORD,"Passw0rd!").toString(), address) ?: ""
     val signature = Sign.signMessage(hash.toByteArray(), (keys as Credentials).ecKeyPair)
 
     Log.d("R", Numeric.toHexString(signature.r).toString())

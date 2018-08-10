@@ -1,14 +1,10 @@
 package com.base.app.httpmodule.http.api.orderapi
 
-import com.base.app.httpmodule.bean.contentinfo.BlockchainAllowanceBaseContentInfo
-import com.base.app.httpmodule.bean.contentinfo.OrderCreateContentInfo
-import com.base.app.httpmodule.bean.request.BlockchainAllowanceRequest
-import com.base.app.httpmodule.bean.request.OrderCreateRequest
+import com.base.app.httpmodule.bean.contentinfo.*
+import com.base.app.httpmodule.bean.request.*
 import com.base.app.httpmodule.http.apiconfig.HttpHeaderConfig
 import retrofit2.Call
-import retrofit2.http.Body
-import retrofit2.http.HeaderMap
-import retrofit2.http.POST
+import retrofit2.http.*
 
 /**
  * RouterFramework
@@ -17,7 +13,22 @@ import retrofit2.http.POST
 interface OrderApi {
     @POST("order/auth/create")
     fun orderAuthCreate(@Body orderCreateRequest: OrderCreateRequest?,
-                    @HeaderMap map: Map<String, String> = HttpHeaderConfig.orderHeader())
+                        @HeaderMap map: Map<String, String> = HttpHeaderConfig.orderHeader())
             : Call<OrderCreateContentInfo>
 
+    @POST("order/auth/list/open")
+    fun queryOrderMy(
+            @Body queryOrderMyRequest: QueryOrderMyRequest?,
+            @HeaderMap map: Map<String, String> = HttpHeaderConfig.commonHeader()
+    ): Call<MutableList<OrderContentInfo>>
+
+    @POST("order/auth/cancel")
+    fun orderCancel(@Body orderCancelRequest: OrderCancelRequest?,
+                    @HeaderMap map: Map<String, String> = HttpHeaderConfig.commonHeader())
+            : Call<OrderCancelContentInfo>
+
+    @POST("order/market")
+    fun queryTheQuotation(@Body queryQuotationRequest: QueryQuotationRequest?,
+                          @HeaderMap map: Map<String, String> = HttpHeaderConfig.commonHeader())
+            : Call<QueryQuotationContentInfo>
 }
