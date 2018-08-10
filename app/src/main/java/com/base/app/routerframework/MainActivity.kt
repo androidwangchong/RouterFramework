@@ -291,13 +291,16 @@ class MainActivity : BaseActivity() {
             is QueryQuotationContentInfo -> {
                 var recentPrice = event.lastPrice!!.toFloat()
                 Log.i("", event.lastPrice)
-                if (TextUtils.isEmpty(event.lastPrice) || event.lastPrice!!.toFloat() == 0f) {
+                if (TextUtils.isEmpty(event.lastPrice) || recentPrice == 0f) {
+//                    underTheCheck(0.5f)
+//                    unDerTheSale(0.5f)
                 } else {
-
                     if (lastPrice == 0f) {
-                        underTheCheck(BigDecimal((recentPrice * 0.8f).toString()).toFloat())
-                        unDerTheSale(BigDecimal((recentPrice * 1.2f).toString()).toFloat())
-                        lastPrice = recentPrice
+                        if (recentPrice != 0f) {
+                            underTheCheck(BigDecimal((recentPrice * 0.8f).toString()).toFloat())
+                            unDerTheSale(BigDecimal((recentPrice * 1.2f).toString()).toFloat())
+                            lastPrice = recentPrice
+                        }
                     } else {
                         if (recentPrice > lastPrice) { //价格上涨
                             queryOrderMy()
